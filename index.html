@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baby Feeding Tracker</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #f7f5f2;
+    color: #333;
+  }
+  h1 {
+    font-size: 1.4rem;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+  }
+  label {
+    font-size: 0.85rem;
+    color: #666;
+  }
+  select, input, button {
+    font-size: 1rem;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+  }
+  button {
+    background: #4a90d9;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button:active { opacity: 0.8; }
+  .entry {
+    background: white;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .entry-info { display: flex; flex-direction: column; }
+  .entry-type { font-weight: 600; }
+  .entry-time { font-size: 0.8rem; color: #888; }
+  .delete-btn {
+    background: none;
+    border: none;
+    color: #c0392b;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  .empty {
+    text-align: center;
+    color: #999;
+    padding: 20px;
+  }
+</style>
+</head>
+<body>
+  <h1>🍼 Feeding Tracker</h1>
+
+  <form id="feed-form">
+    <label for="feed-type">Type</label>
+    <select id="feed-type">
+      <option value="Breast">Breast</option>
+      <option value="Bottle">Bottle</option>
+      <option value="Solid">Solid</option>
+    </select>
+
+    <label for="feed-time">Time</label>
+    <input type="datetime-local" id="feed-time" required>
+
+    <button type="submit">Log Feeding</button>
+  </form>
+
+  <div id="entries"></div>
+
+  <script>
+    const STORAGE_KEY = 'babyFeedings';
+
+    function loadEntries() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
+    function saveEntries(entries) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function formatTime(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString(undefined, {
+        month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+      });
+    }
+
+    function render() {
+      const entries = loadEntries().sort((a, b) => new Date(b.time) - new Date(a.time));
+      const container = document.getElementById('entries');
+      container.innerHTML = '';
+
+      if (entries.length === 0) {
+        container.innerHTML = '<div class="empty">No feedings logged yet.</div>';
+        return;
+      }
+
+      entries.forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'entry';
+        div.innerHTML = `
+          <div class="entry-info">
+            <span class="entry-type">${entry.type}</span>
+            <span class="entry-time">${formatTime(entry.time)}</span>
+          </div>
+          <button class="delete-btn" data-id="${entry.id}">✕</button>
+        `;
+        container.appendChild(div);
+      });
+
+      container.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-id');
+          const remaining = loadEntries().filter(e => e.id !== id);
+          saveEntries(remaining);
+          render();
+        });
+      });
+    }
+
+    document.getElementById('feed-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const type = document.getElementById('feed-type').value;
+      const time = document.getElementById('feed-time').value;
+      if (!time) return;
+
+      const entries = loadEntries();
+      entries.push({ id: crypto.randomUUID(), type, time: new Date(time).toISOString() });
+      saveEntries(entries);
+
+      document.getElementById('feed-form').reset();
+      setDefaultTime();
+      render();
+    });
+
+    function setDefaultTime() {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('feed-time').value = now.toISOString().slice(0, 16);
+    }
+
+    setDefaultTime();
+    render();
+  </script>
+</body>
+</html>
