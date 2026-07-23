@@ -98,10 +98,10 @@
   <script>
     const SUPABASE_URL = 'https://qkcpnqinxmealexfqowt.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_mIw0qVK1aQKy4iXWA4UEBw_2Ibh_12N';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function loadEntries() {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('feedings')
         .select('*')
         .order('time', { ascending: false });
@@ -145,7 +145,7 @@
       container.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
           const id = btn.getAttribute('data-id');
-          await supabase.from('feedings').delete().eq('id', id);
+          await supabaseClient.from('feedings').delete().eq('id', id);
           render();
         });
       });
@@ -157,7 +157,7 @@
       const time = document.getElementById('feed-time').value;
       if (!time) return;
 
-      await supabase.from('feedings').insert({ type, time: new Date(time).toISOString() });
+      await supabaseClient.from('feedings').insert({ type, time: new Date(time).toISOString() });
 
       document.getElementById('feed-form').reset();
       setDefaultTime();
