@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Baby Feeding Tracker</title>
+<title>Baby Tracker</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -11,154 +11,78 @@
     max-width: 480px;
     margin: 0 auto;
     padding: 20px;
-    background: #f7f5f2;
-    color: #333;
+    background: #12141c;
+    color: #fff;
+    min-height: 100vh;
   }
   h1 {
-    font-size: 1.4rem;
-    text-align: center;
+    font-size: 1.3rem;
     margin-bottom: 20px;
-  }
-  h2 {
-    font-size: 1rem;
-    color: #666;
-    margin-bottom: 10px;
-  }
-  form {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: white;
-    padding: 16px;
-    border-radius: 12px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+    align-items: center;
+    gap: 8px;
   }
-  label {
-    font-size: 0.85rem;
-    color: #666;
-  }
-  select, input, button {
-    font-size: 1rem;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-  }
-  button {
-    background: #4a90d9;
+  .card {
+    border-radius: 16px;
+    padding: 20px 22px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-decoration: none;
     color: white;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
   }
-  button:active { opacity: 0.8; }
-  .toggle-group {
-    display: flex;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
+  .card-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
   }
-  .toggle-btn {
-    flex: 1;
-    padding: 10px;
-    text-align: center;
-    background: white;
-    color: #333;
-    border: none;
-    border-radius: 0;
-    cursor: pointer;
-    font-weight: 600;
+  .card-body { flex: 1; min-width: 0; }
+  .card-title {
+    font-size: 1.4rem;
+    font-weight: 700;
   }
-  .toggle-btn.active {
-    background: #8bc34a;
-    color: #223;
+  .card-sub {
+    font-size: 1rem;
+    font-weight: 500;
+    opacity: 0.9;
+    margin-top: 2px;
   }
-  .amount-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .feeding-card {
+    background: linear-gradient(135deg, #ff7a45, #ff5722);
   }
-  .amount-row input[type="range"] {
-    flex: 1;
-    padding: 0;
-    border: none;
-    margin-right: 12px;
+  .link-card {
+    background: #1e2330;
+    border: 1px solid #2a3040;
   }
-  .amount-value {
-    font-weight: 600;
-    min-width: 70px;
-    text-align: right;
+  .link-card .card-sub {
+    color: #8b93a7;
+    opacity: 1;
   }
-  .hidden { display: none; }
-  .entry {
-    background: white;
-    padding: 12px 16px;
-    border-radius: 10px;
-    margin-bottom: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .entry-info { display: flex; flex-direction: column; }
-  .entry-type { font-weight: 600; }
-  .entry-detail { font-size: 0.8rem; color: #666; }
-  .entry-time { font-size: 0.8rem; color: #888; }
-  .delete-btn {
-    background: none;
-    border: none;
-    color: #c0392b;
-    font-size: 1.1rem;
-    cursor: pointer;
-    padding: 4px 8px;
-  }
-  .empty {
-    text-align: center;
-    color: #999;
-    padding: 20px;
+  .chevron {
+    font-size: 1.4rem;
+    color: #8b93a7;
   }
 </style>
 </head>
 <body>
-  <h1>🍼 Feeding Tracker</h1>
+  <h1>👶 Baby Tracker</h1>
 
-  <form id="feed-form">
-    <label>Type</label>
-    <div class="toggle-group" id="feeding-type-toggle">
-      <button type="button" class="toggle-btn" data-value="Nursing">Nursing</button>
-      <button type="button" class="toggle-btn active" data-value="Bottle">Bottle</button>
+  <div class="card feeding-card" id="last-feed-card">
+    <div class="card-icon">🍼</div>
+    <div class="card-body">
+      <div class="card-title">Feeding</div>
+      <div class="card-sub" id="feed-summary">Loading…</div>
     </div>
+  </div>
 
-    <label for="feed-time">Start Time</label>
-    <input type="datetime-local" id="feed-time" required>
-
-    <div id="bottle-fields">
-      <label for="milk-type">Milk Type</label>
-      <select id="milk-type">
-        <option value="Breast milk">Breast milk</option>
-        <option value="Formula">Formula</option>
-      </select>
-
-      <label>Unit</label>
-      <div class="toggle-group" id="unit-toggle">
-        <button type="button" class="toggle-btn" data-value="oz">oz</button>
-        <button type="button" class="toggle-btn active" data-value="mL">mL</button>
-      </div>
-
-      <label for="amount">Amount (optional)</label>
-      <div class="amount-row">
-        <input type="range" id="amount" min="0" max="350" step="10" value="120">
-        <span class="amount-value" id="amount-value">120 mL</span>
-      </div>
+  <a class="card link-card" href="feeding.html">
+    <div class="card-icon">🍼</div>
+    <div class="card-body">
+      <div class="card-title" style="font-size:1.1rem;">Feeding Tracker</div>
+      <div class="card-sub">Log a new feeding</div>
     </div>
-
-    <label for="note">Note (optional)</label>
-    <input type="text" id="note" placeholder="Add note">
-
-    <button type="submit">Log Feeding</button>
-  </form>
-
-  <div id="entries"></div>
+    <div class="chevron">›</div>
+  </a>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
@@ -166,144 +90,50 @@
     const SUPABASE_KEY = 'sb_publishable_mIw0qVK1aQKy4iXWA4UEBw_2Ibh_12N';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let feedingType = 'Bottle';
-    let unit = 'mL';
+    let lastEntry = null;
 
-    const UNIT_RANGES = {
-      mL: { min: 0, max: 350, step: 10 },
-      oz: { min: 0, max: 12, step: 0.5 }
-    };
-
-    const feedingTypeToggle = document.getElementById('feeding-type-toggle');
-    const unitToggle = document.getElementById('unit-toggle');
-    const bottleFields = document.getElementById('bottle-fields');
-    const amountInput = document.getElementById('amount');
-    const amountValue = document.getElementById('amount-value');
-
-    feedingTypeToggle.querySelectorAll('.toggle-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        feedingTypeToggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        feedingType = btn.getAttribute('data-value');
-        bottleFields.classList.toggle('hidden', feedingType !== 'Bottle');
-      });
-    });
-
-    unitToggle.querySelectorAll('.toggle-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        unitToggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        unit = btn.getAttribute('data-value');
-        const range = UNIT_RANGES[unit];
-        amountInput.min = range.min;
-        amountInput.max = range.max;
-        amountInput.step = range.step;
-        amountInput.value = Math.min(amountInput.value, range.max);
-        updateAmountDisplay();
-      });
-    });
-
-    amountInput.addEventListener('input', updateAmountDisplay);
-
-    function updateAmountDisplay() {
-      amountValue.textContent = `${amountInput.value} ${unit}`;
+    function formatDuration(ms) {
+      const totalMinutes = Math.floor(ms / 60000);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      if (hours <= 0) return `${minutes}m ago`;
+      return `${hours}h ${minutes}m ago`;
     }
 
-    async function loadEntries() {
+    function updateSummary() {
+      const summaryEl = document.getElementById('feed-summary');
+      if (!lastEntry) return;
+      const timeAgo = formatDuration(Date.now() - new Date(lastEntry.time).getTime());
+      const amount = lastEntry.amount != null ? `${lastEntry.amount}${lastEntry.unit || ''}` : lastEntry.type;
+      summaryEl.textContent = `${timeAgo} · ${amount}`;
+    }
+
+    async function loadLastFeed() {
       const { data, error } = await supabaseClient
         .from('feedings')
         .select('*')
-        .order('time', { ascending: false });
+        .order('time', { ascending: false })
+        .limit(1);
+
+      const summaryEl = document.getElementById('feed-summary');
+
       if (error) {
         console.error(error);
-        return [];
-      }
-      return data;
-    }
-
-    function formatTime(iso) {
-      const d = new Date(iso);
-      return d.toLocaleString(undefined, {
-        month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
-      });
-    }
-
-    function formatDetail(entry) {
-      const parts = [];
-      if (entry.milk_type) parts.push(entry.milk_type);
-      if (entry.amount != null) parts.push(`${entry.amount} ${entry.unit || ''}`.trim());
-      if (entry.note) parts.push(entry.note);
-      return parts.join(' · ');
-    }
-
-    async function render() {
-      const entries = await loadEntries();
-      const container = document.getElementById('entries');
-      container.innerHTML = '';
-
-      if (entries.length === 0) {
-        container.innerHTML = '<div class="empty">No feedings logged yet.</div>';
+        summaryEl.textContent = 'Error loading data';
         return;
       }
 
-      entries.forEach(entry => {
-        const div = document.createElement('div');
-        div.className = 'entry';
-        const detail = formatDetail(entry);
-        div.innerHTML = `
-          <div class="entry-info">
-            <span class="entry-type">${entry.type}</span>
-            ${detail ? `<span class="entry-detail">${detail}</span>` : ''}
-            <span class="entry-time">${formatTime(entry.time)}</span>
-          </div>
-          <button class="delete-btn" data-id="${entry.id}">✕</button>
-        `;
-        container.appendChild(div);
-      });
-
-      container.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const id = btn.getAttribute('data-id');
-          await supabaseClient.from('feedings').delete().eq('id', id);
-          render();
-        });
-      });
-    }
-
-    document.getElementById('feed-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const time = document.getElementById('feed-time').value;
-      if (!time) return;
-
-      const record = {
-        type: feedingType,
-        time: new Date(time).toISOString(),
-        note: document.getElementById('note').value || null
-      };
-
-      if (feedingType === 'Bottle') {
-        record.milk_type = document.getElementById('milk-type').value;
-        record.amount = Number(amountInput.value);
-        record.unit = unit;
+      if (!data || data.length === 0) {
+        summaryEl.textContent = 'No feedings logged yet.';
+        return;
       }
 
-      await supabaseClient.from('feedings').insert(record);
-
-      document.getElementById('feed-form').reset();
-      setDefaultTime();
-      updateAmountDisplay();
-      render();
-    });
-
-    function setDefaultTime() {
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      document.getElementById('feed-time').value = now.toISOString().slice(0, 16);
+      lastEntry = data[0];
+      updateSummary();
     }
 
-    setDefaultTime();
-    updateAmountDisplay();
-    render();
+    loadLastFeed();
+    setInterval(updateSummary, 30000);
   </script>
 </body>
 </html>
