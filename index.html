@@ -94,15 +94,22 @@
 
   <div id="entries"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
-    const STORAGE_KEY = 'babyFeedings';
+    const SUPABASE_URL = 'https://qkcpnqinxmealexfqowt.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_mIw0qVK1aQKy4iXWA4UEBw_2Ibh_12N';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    function loadEntries() {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    }
-
-    function saveEntries(entries) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    async function loadEntries() {
+      const { data, error } = await supabase
+        .from('feedings')
+        .select('*')
+        .order('time', { ascending: false });
+      if (error) {
+        console.error(error);
+        return [];
+      }
+      return data;
     }
 
     function formatTime(iso) {
@@ -112,8 +119,8 @@
       });
     }
 
-    function render() {
-      const entries = loadEntries().sort((a, b) => new Date(b.time) - new Date(a.time));
+    async function render() {
+      const entries = await loadEntries();
       const container = document.getElementById('entries');
       container.innerHTML = '';
 
@@ -136,24 +143,21 @@
       });
 
       container.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
           const id = btn.getAttribute('data-id');
-          const remaining = loadEntries().filter(e => e.id !== id);
-          saveEntries(remaining);
+          await supabase.from('feedings').delete().eq('id', id);
           render();
         });
       });
     }
 
-    document.getElementById('feed-form').addEventListener('submit', (e) => {
+    document.getElementById('feed-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const type = document.getElementById('feed-type').value;
       const time = document.getElementById('feed-time').value;
       if (!time) return;
 
-      const entries = loadEntries();
-      entries.push({ id: crypto.randomUUID(), type, time: new Date(time).toISOString() });
-      saveEntries(entries);
+      await supabase.from('feedings').insert({ type, time: new Date(time).toISOString() });
 
       document.getElementById('feed-form').reset();
       setDefaultTime();
