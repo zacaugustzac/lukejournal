@@ -19,6 +19,11 @@
     text-align: center;
     margin-bottom: 20px;
   }
+  h2 {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 10px;
+  }
   form {
     display: flex;
     flex-direction: column;
@@ -47,6 +52,44 @@
     font-weight: 600;
   }
   button:active { opacity: 0.8; }
+  .toggle-group {
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .toggle-btn {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    background: white;
+    color: #333;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .toggle-btn.active {
+    background: #8bc34a;
+    color: #223;
+  }
+  .amount-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .amount-row input[type="range"] {
+    flex: 1;
+    padding: 0;
+    border: none;
+    margin-right: 12px;
+  }
+  .amount-value {
+    font-weight: 600;
+    min-width: 70px;
+    text-align: right;
+  }
+  .hidden { display: none; }
   .entry {
     background: white;
     padding: 12px 16px;
@@ -59,6 +102,7 @@
   }
   .entry-info { display: flex; flex-direction: column; }
   .entry-type { font-weight: 600; }
+  .entry-detail { font-size: 0.8rem; color: #666; }
   .entry-time { font-size: 0.8rem; color: #888; }
   .delete-btn {
     background: none;
@@ -79,15 +123,37 @@
   <h1>🍼 Feeding Tracker</h1>
 
   <form id="feed-form">
-    <label for="feed-type">Type</label>
-    <select id="feed-type">
-      <option value="Breast">Breast</option>
-      <option value="Bottle">Bottle</option>
-      <option value="Solid">Solid</option>
-    </select>
+    <label>Type</label>
+    <div class="toggle-group" id="feeding-type-toggle">
+      <button type="button" class="toggle-btn" data-value="Nursing">Nursing</button>
+      <button type="button" class="toggle-btn active" data-value="Bottle">Bottle</button>
+    </div>
 
-    <label for="feed-time">Time</label>
+    <label for="feed-time">Start Time</label>
     <input type="datetime-local" id="feed-time" required>
+
+    <div id="bottle-fields">
+      <label for="milk-type">Milk Type</label>
+      <select id="milk-type">
+        <option value="Breast milk">Breast milk</option>
+        <option value="Formula">Formula</option>
+      </select>
+
+      <label>Unit</label>
+      <div class="toggle-group" id="unit-toggle">
+        <button type="button" class="toggle-btn" data-value="oz">oz</button>
+        <button type="button" class="toggle-btn active" data-value="mL">mL</button>
+      </div>
+
+      <label for="amount">Amount (optional)</label>
+      <div class="amount-row">
+        <input type="range" id="amount" min="0" max="350" step="10" value="120">
+        <span class="amount-value" id="amount-value">120 mL</span>
+      </div>
+    </div>
+
+    <label for="note">Note (optional)</label>
+    <input type="text" id="note" placeholder="Add note">
 
     <button type="submit">Log Feeding</button>
   </form>
@@ -99,6 +165,49 @@
     const SUPABASE_URL = 'https://qkcpnqinxmealexfqowt.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_mIw0qVK1aQKy4iXWA4UEBw_2Ibh_12N';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let feedingType = 'Bottle';
+    let unit = 'mL';
+
+    const UNIT_RANGES = {
+      mL: { min: 0, max: 350, step: 10 },
+      oz: { min: 0, max: 12, step: 0.5 }
+    };
+
+    const feedingTypeToggle = document.getElementById('feeding-type-toggle');
+    const unitToggle = document.getElementById('unit-toggle');
+    const bottleFields = document.getElementById('bottle-fields');
+    const amountInput = document.getElementById('amount');
+    const amountValue = document.getElementById('amount-value');
+
+    feedingTypeToggle.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        feedingTypeToggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        feedingType = btn.getAttribute('data-value');
+        bottleFields.classList.toggle('hidden', feedingType !== 'Bottle');
+      });
+    });
+
+    unitToggle.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        unitToggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        unit = btn.getAttribute('data-value');
+        const range = UNIT_RANGES[unit];
+        amountInput.min = range.min;
+        amountInput.max = range.max;
+        amountInput.step = range.step;
+        amountInput.value = Math.min(amountInput.value, range.max);
+        updateAmountDisplay();
+      });
+    });
+
+    amountInput.addEventListener('input', updateAmountDisplay);
+
+    function updateAmountDisplay() {
+      amountValue.textContent = `${amountInput.value} ${unit}`;
+    }
 
     async function loadEntries() {
       const { data, error } = await supabaseClient
@@ -119,6 +228,14 @@
       });
     }
 
+    function formatDetail(entry) {
+      const parts = [];
+      if (entry.milk_type) parts.push(entry.milk_type);
+      if (entry.amount != null) parts.push(`${entry.amount} ${entry.unit || ''}`.trim());
+      if (entry.note) parts.push(entry.note);
+      return parts.join(' · ');
+    }
+
     async function render() {
       const entries = await loadEntries();
       const container = document.getElementById('entries');
@@ -132,9 +249,11 @@
       entries.forEach(entry => {
         const div = document.createElement('div');
         div.className = 'entry';
+        const detail = formatDetail(entry);
         div.innerHTML = `
           <div class="entry-info">
             <span class="entry-type">${entry.type}</span>
+            ${detail ? `<span class="entry-detail">${detail}</span>` : ''}
             <span class="entry-time">${formatTime(entry.time)}</span>
           </div>
           <button class="delete-btn" data-id="${entry.id}">✕</button>
@@ -153,14 +272,26 @@
 
     document.getElementById('feed-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const type = document.getElementById('feed-type').value;
       const time = document.getElementById('feed-time').value;
       if (!time) return;
 
-      await supabaseClient.from('feedings').insert({ type, time: new Date(time).toISOString() });
+      const record = {
+        type: feedingType,
+        time: new Date(time).toISOString(),
+        note: document.getElementById('note').value || null
+      };
+
+      if (feedingType === 'Bottle') {
+        record.milk_type = document.getElementById('milk-type').value;
+        record.amount = Number(amountInput.value);
+        record.unit = unit;
+      }
+
+      await supabaseClient.from('feedings').insert(record);
 
       document.getElementById('feed-form').reset();
       setDefaultTime();
+      updateAmountDisplay();
       render();
     });
 
@@ -171,6 +302,7 @@
     }
 
     setDefaultTime();
+    updateAmountDisplay();
     render();
   </script>
 </body>
